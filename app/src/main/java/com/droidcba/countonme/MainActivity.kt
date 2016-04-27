@@ -11,14 +11,38 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
+import com.droidcba.countonme.commons.androidOn
+import com.droidcba.countonme.commons.db
+import com.droidcba.countonme.db.RepositorySqlImpl
+import com.droidcba.countonme.items.ItemsManager
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+
+    val itemsManager by lazy { ItemsManager(RepositorySqlImpl(applicationContext.db)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
         val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
+
+        /*itemsManager.createGroup("otro gato")
+                .androidOn()
+                .subscribe {
+                    Toast.makeText(applicationContext, "Group created: ${it.desc}", Toast.LENGTH_SHORT)
+                            .show()
+                }*/
+
+        itemsManager.createGroup("Group1")
+                .flatMap { itemsManager.createItem(it.id, "Item1") }
+                .flatMap { itemsManager.getGroups() }
+                .androidOn()
+                .subscribe {
+                    Toast.makeText(applicationContext,
+                            "Group and Item created! Groups size: ${it.size}",
+                            Toast.LENGTH_SHORT).show()
+                }
 
         val fab = findViewById(R.id.fab) as FloatingActionButton
         fab.setOnClickListener({ view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show() })
