@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
+import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentManager
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
@@ -15,6 +17,7 @@ import android.widget.Toast
 import com.droidcba.countonme.commons.androidOn
 import com.droidcba.countonme.commons.db
 import com.droidcba.countonme.db.RepositorySqlImpl
+import com.droidcba.countonme.items.ItemsFragment
 import com.droidcba.countonme.items.ItemsManager
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -24,17 +27,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
+
         val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
 
-        /*itemsManager.createGroup("otro gato")
-                .androidOn()
-                .subscribe {
-                    Toast.makeText(applicationContext, "Group created: ${it.desc}", Toast.LENGTH_SHORT)
-                            .show()
-                }*/
-
-        itemsManager.createGroup("Group1")
+        /*itemsManager.createGroup("Group1")
                 .flatMap { itemsManager.createItem(it.id, "Item1") }
                 .flatMap { itemsManager.getGroups() }
                 .androidOn()
@@ -42,7 +39,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     Toast.makeText(applicationContext,
                             "Group and Item created! Groups size: ${it.size}",
                             Toast.LENGTH_SHORT).show()
-                }
+                }*/
 
         val fab = findViewById(R.id.fab) as FloatingActionButton
         fab.setOnClickListener({ view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show() })
@@ -55,6 +52,30 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val navigationView = findViewById(R.id.nav_view) as NavigationView
         navigationView.setNavigationItemSelectedListener(this)
+
+        if (savedInstanceState == null) {
+            changeFragment(ItemsFragment())
+        }
+    }
+
+    fun changeFragment(f: Fragment, cleanStack: Boolean = false) {
+        val ft = supportFragmentManager.beginTransaction();
+        if (cleanStack) {
+            clearBackStack();
+        }
+        ft.setCustomAnimations(
+                R.anim.abc_fade_in, R.anim.abc_fade_out, R.anim.abc_popup_enter, R.anim.abc_popup_exit);
+        ft.replace(R.id.activity_base_content, f);
+        ft.addToBackStack(null);
+        ft.commit();
+    }
+
+    fun clearBackStack() {
+        val manager = supportFragmentManager;
+        if (manager.backStackEntryCount > 0) {
+            val first = manager.getBackStackEntryAt(0);
+            manager.popBackStack(first.id, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
     }
 
     override fun onBackPressed() {

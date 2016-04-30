@@ -57,6 +57,7 @@ class ItemsManager(private val db: Repository) {
             val id = insertFunc()
             if (id > 0) {
                 it.onNext(createFunc(id))
+                it.onCompleted()
             } else {
                 it.onError(Throwable("There was an error to create the Group."))
             }
