@@ -3,6 +3,7 @@ package com.droidcba.countonme.items
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
+import com.droidcba.countonme.Count
 import com.droidcba.countonme.Group
 import com.droidcba.countonme.Item
 import com.droidcba.countonme.R
@@ -23,10 +24,11 @@ class ItemsAdapter(
         //val dataProvider: Repository
 ) : AbstractExpandableItemAdapter<ItemsAdapter.GroupViewHolder, ItemsAdapter.ItemViewHolder>() {
 
-    val data = listOf(
-            Group(0, listOf(Item(0, listOf(), "item1"), Item(1, listOf(), "item2")), "group 1"),
-            Group(1, listOf(Item(2, listOf(), "item3"), Item(3, listOf(), "item4")), "group 2")
-    )
+    var year: Int = 0
+    var month: Int = 0
+    var day: Int = 0
+
+    var data = listOf<Group>()
     val onGroupClick = View.OnClickListener { handleGroupClick(it) }
     val onItemClick = View.OnClickListener { handleItemClick(it) }
 
@@ -34,6 +36,23 @@ class ItemsAdapter(
         // ExpandableItemAdapter requires stable ID, and also
         // have to implement the getGroupItemId()/getChildItemId() methods appropriately.
         setHasStableIds(true)
+    }
+
+    fun setDate(year: Int, month: Int, day: Int) {
+        this.year = year
+        this.month = month
+        this.day = day
+        data = listOf(
+                Group(0, listOf(
+                        Item(0, listOf(Count(0, 4, 2016, 4, 30)), "Pastilla Tos"),
+                        Item(1, listOf(Count(1, 5, 2016, 4, 30)), "Salir a correr")
+                ), "Salud"),
+                Group(1, listOf(
+                        Item(2, listOf(Count(2, 0, 2016, 4, 30)), "Denario"),
+                        Item(3, listOf(Count(3, 1, 2016, 4, 30)), "Visita Santuario")
+                ), "Relacion con Dios")
+        )
+        notifyDataSetChanged()
     }
 
     override fun onCreateGroupViewHolder(parent: ViewGroup, viewType: Int): GroupViewHolder {
@@ -71,14 +90,18 @@ class ItemsAdapter(
     class GroupViewHolder(v: View, val clickListener: View.OnClickListener) : AbstractExpandableItemViewHolder(v) {
 
         fun bind(group: Group) = with(itemView) {
+            groupPlusButton.setOnClickListener {
+                // TODO: ??
+            }
             tvDescription.text = group.desc
             setOnClickListener(clickListener)
         }
     }
 
-    class ItemViewHolder(v: View, val clickListener: View.OnClickListener) : AbstractExpandableItemViewHolder(v) {
+    inner class ItemViewHolder(v: View, val clickListener: View.OnClickListener) : AbstractExpandableItemViewHolder(v) {
         fun bind(item: Item) = with(itemView) {
             tvTitle.text = item.desc
+            tvCounter.text = item.getCountByDate(year, month, day)?.counts.toString()
             setOnClickListener(clickListener)
         }
     }

@@ -52,6 +52,8 @@ class ItemsFragment : Fragment() {
         if (eimSavedState == null) {
             rvItemManager.expandAll()
         }
+
+        adapter.setDate(2016, 4, 30)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
