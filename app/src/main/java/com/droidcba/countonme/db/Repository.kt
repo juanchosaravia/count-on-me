@@ -14,4 +14,5 @@ interface Repository {
 
     fun getCountsByItemId(itemId: Int): List<DbCount>?
     fun insertItem(item: DbItem): Long
+    fun getCountsByItemIdMonthYear(itemId: Int, month: Int, year: Int): List<DbCount>?
 }

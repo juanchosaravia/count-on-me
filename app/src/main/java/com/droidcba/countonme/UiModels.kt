@@ -5,11 +5,11 @@ package com.droidcba.countonme
  * @author juancho.
  */
 class Group(val id: Int,
-            val items: List<Item>,
+            val items: MutableList<Item>,
             val desc: String)
 
 class Item(val id: Int,
-           val counts: List<Count>,
+           val counts: MutableList<Count>,
            val desc: String) {
 
     fun getCountByDate(year: Int, month: Int, day: Int) =

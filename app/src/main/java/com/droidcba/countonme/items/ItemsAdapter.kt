@@ -3,7 +3,6 @@ package com.droidcba.countonme.items
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
-import com.droidcba.countonme.Count
 import com.droidcba.countonme.Group
 import com.droidcba.countonme.Item
 import com.droidcba.countonme.R
@@ -20,15 +19,22 @@ import kotlinx.android.synthetic.main.items_list_item.view.*
  * @author juancho.
  */
 class ItemsAdapter(
-        val rvItemManager: RecyclerViewExpandableItemManager
+        val rvItemManager: RecyclerViewExpandableItemManager,
+        val onItemsClick: onItemsAdapterClicks
         //val dataProvider: Repository
 ) : AbstractExpandableItemAdapter<ItemsAdapter.GroupViewHolder, ItemsAdapter.ItemViewHolder>() {
+
+    interface onItemsAdapterClicks {
+        fun onGroupPlus(group: Group, groupPosition: Int)
+        fun onItemNew(view: View, groupPosition: Int)
+        fun onItemIncrement(item: Item, groupPosition: Int)
+    }
 
     var year: Int = 0
     var month: Int = 0
     var day: Int = 0
 
-    var data = listOf<Group>()
+    var data = mutableListOf<Group>()
     val onGroupClick = View.OnClickListener { handleGroupClick(it) }
     val onItemClick = View.OnClickListener { handleItemClick(it) }
 
@@ -38,30 +44,13 @@ class ItemsAdapter(
         setHasStableIds(true)
     }
 
-    fun setDate(year: Int, month: Int, day: Int) {
-        this.year = year
-        this.month = month
-        this.day = day
-        data = listOf(
-                Group(0, listOf(
-                        Item(0, listOf(Count(0, 4, 2016, 4, 30)), "Pastilla Tos"),
-                        Item(1, listOf(Count(1, 5, 2016, 4, 30)), "Salir a correr")
-                ), "Salud"),
-                Group(1, listOf(
-                        Item(2, listOf(Count(2, 0, 2016, 4, 30)), "Denario"),
-                        Item(3, listOf(Count(3, 1, 2016, 4, 30)), "Visita Santuario")
-                ), "Relacion con Dios")
-        )
-        notifyDataSetChanged()
-    }
-
     override fun onCreateGroupViewHolder(parent: ViewGroup, viewType: Int): GroupViewHolder {
         val view = parent.inflate(R.layout.items_list_group)
         return GroupViewHolder(view, onGroupClick)
     }
 
     override fun onBindGroupViewHolder(holder: GroupViewHolder, groupPosition: Int, viewType: Int) {
-        holder.bind(data[groupPosition])
+        holder.bind(data[groupPosition], groupPosition)
     }
 
     override fun onCreateChildViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
@@ -70,7 +59,7 @@ class ItemsAdapter(
     }
 
     override fun onBindChildViewHolder(holder: ItemViewHolder, groupPosition: Int, childPosition: Int, viewType: Int) {
-        holder.bind(data[groupPosition].items[childPosition])
+        holder.bind(data[groupPosition].items[childPosition], groupPosition, childPosition)
     }
 
     override fun getGroupCount() = data.size
@@ -87,11 +76,14 @@ class ItemsAdapter(
     override fun getChildId(groupPosition: Int, childPosition: Int)
             = data[groupPosition].items[childPosition].id.toLong()
 
-    class GroupViewHolder(v: View, val clickListener: View.OnClickListener) : AbstractExpandableItemViewHolder(v) {
+    /**
+     *  View Holders
+     */
 
-        fun bind(group: Group) = with(itemView) {
+    inner class GroupViewHolder(v: View, val clickListener: View.OnClickListener) : AbstractExpandableItemViewHolder(v) {
+        fun bind(group: Group, groupPosition: Int) = with(itemView) {
             groupPlusButton.setOnClickListener {
-                // TODO: ??
+                onItemsClick.onGroupPlus(group, groupPosition)
             }
             tvDescription.text = group.desc
             setOnClickListener(clickListener)
@@ -99,12 +91,36 @@ class ItemsAdapter(
     }
 
     inner class ItemViewHolder(v: View, val clickListener: View.OnClickListener) : AbstractExpandableItemViewHolder(v) {
-        fun bind(item: Item) = with(itemView) {
+        fun bind(item: Item, groupPosition: Int, itemPosition: Int) = with(itemView) {
             tvTitle.text = item.desc
-            tvCounter.text = item.getCountByDate(year, month, day)?.counts.toString()
+            val count = item.getCountByDate(year, month, day)
+            tvCounter.text = if (count != null) count.counts.toString() else "0"
             setOnClickListener(clickListener)
         }
     }
+
+    /**
+     * Handle Click Actions
+     */
+
+    fun setGroups(groups: List<Group>) {
+        data = groups.toMutableList()
+        notifyDataSetChanged()
+    }
+
+    fun addGroup(group: Group) {
+        data.add(group)
+        notifyItemInserted(data.lastIndex)
+    }
+
+    fun addItem(groupPosition: Int, item: Item) {
+        data[groupPosition].items.add(item)
+        notifyDataSetChanged()
+    }
+
+    /**
+     * Handle Clicks
+     */
 
     fun handleGroupClick(view: View) {
         val vh = RecyclerViewAdapterUtils.getViewHolder(view)

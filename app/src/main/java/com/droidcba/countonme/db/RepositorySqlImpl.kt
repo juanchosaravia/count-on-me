@@ -53,6 +53,22 @@ class RepositorySqlImpl(val sql: CountOnMeDbHelper) : Repository {
         }
     }
 
+    override fun getCountsByItemIdMonthYear(itemId: Int, month: Int, year: Int): List<DbCount>? {
+        return sql.use {
+            select(DbSchema.TABLE_COUNTS_NAME)
+                    .where("${DbSchema.CountsColumns.ITEM_ID} = {id}" +
+                            " AND ${DbSchema.CountsColumns.MONTH} = {month}" +
+                            " AND ${DbSchema.CountsColumns.YEAR} = {year}",
+                            "id" to itemId, "month" to month, "year" to year)
+                    .exec {
+                        parseList(
+                                rowParser { id: Int, counts: Int, year: Int, month: Int, day: Int ->
+                                    DbCount(id, counts, year, month, day)
+                                })
+                    }
+        }
+    }
+
     override fun getCountsByItemId(itemId: Int): List<DbCount>? {
         return sql.use {
             select(DbSchema.TABLE_COUNTS_NAME)

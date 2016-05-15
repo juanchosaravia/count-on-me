@@ -3,10 +3,13 @@ package com.droidcba.countonme.items
 import com.droidcba.countonme.Count
 import com.droidcba.countonme.Group
 import com.droidcba.countonme.Item
+import com.droidcba.countonme.commons.getMonth
+import com.droidcba.countonme.commons.getYear
 import com.droidcba.countonme.db.DbGroup
 import com.droidcba.countonme.db.DbItem
 import com.droidcba.countonme.db.Repository
 import rx.Observable
+import java.util.*
 
 
 /**
@@ -15,7 +18,7 @@ import rx.Observable
  */
 class ItemsManager(private val db: Repository) {
 
-    fun getGroups(): Observable<List<Group>> {
+    fun getGroupsByDate(date: Calendar): Observable<List<Group>> {
         // TODO: can be improved by getting all items and count in memory instead of doing a db query for each element.
         return Observable.create { subscriber ->
             // groups
@@ -23,13 +26,15 @@ class ItemsManager(private val db: Repository) {
                 // items
                 val items = db.getItemsByGroupId(group.id)?.map { item ->
                     // counts
-                    val counts = db.getCountsByItemId(item.id)?.map {
+                    val counts = db.getCountsByItemIdMonthYear(item.id,
+                            date.getMonth(),
+                            date.getYear())?.map {
                         Count(it.id, it.counts, it.year, it.month, it.day)
                     } ?: listOf()
-                    Item(item.groupId, counts, item.desc)
+                    Item(item.groupId, counts.toMutableList(), item.desc)
                 } ?: listOf()
 
-                Group(group.id, items, group.desc)
+                Group(group.id, items.toMutableList(), group.desc)
             } ?: listOf()
             subscriber.onNext(groups)
             subscriber.onCompleted()
@@ -40,15 +45,15 @@ class ItemsManager(private val db: Repository) {
         return insertDb({
             db.insertGroup(DbGroup(desc = desc))
         }, {
-            Group(it.toInt(), listOf(), desc)
+            Group(it.toInt(), mutableListOf(), desc)
         })
     }
 
-    fun createItem(groupId: Int, desc: String): Observable<Item> {
+    fun createItem(group: Group, desc: String): Observable<Item> {
         return insertDb({
-            db.insertItem(DbItem(desc = desc, groupId = groupId))
+            db.insertItem(DbItem(desc = desc, groupId = group.id))
         }, {
-            Item(it.toInt(), listOf(), desc)
+            Item(it.toInt(), mutableListOf(), desc)
         })
     }
 
