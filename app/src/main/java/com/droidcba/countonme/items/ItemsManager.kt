@@ -3,8 +3,10 @@ package com.droidcba.countonme.items
 import com.droidcba.countonme.Count
 import com.droidcba.countonme.Group
 import com.droidcba.countonme.Item
+import com.droidcba.countonme.commons.getDay
 import com.droidcba.countonme.commons.getMonth
 import com.droidcba.countonme.commons.getYear
+import com.droidcba.countonme.db.DbCount
 import com.droidcba.countonme.db.DbGroup
 import com.droidcba.countonme.db.DbItem
 import com.droidcba.countonme.db.Repository
@@ -57,6 +59,41 @@ class ItemsManager(private val db: Repository) {
         })
     }
 
+    fun incrementItem(item: Item, date: Calendar): Observable<Count> {
+        return Observable.create<Count> {
+            var counts = 1
+            var id = 0
+            val year = date.getYear()
+            val month = date.getMonth()
+            val day = date.getDay()
+
+            // TODO: prevent this search by doing a select in the db.
+            val count = item.getCountByDate(year, month, day)
+            if (count != null) {
+                counts += count.counts // add old counts
+                id = db.updateCount(
+                        DbCount(count.id,
+                                item.id,
+                                counts,
+                                date.getYear(),
+                                date.getMonth(),
+                                date.getDay()))
+            } else {
+                id = db.insertCount(DbCount(itemId = item.id,
+                        counts = counts,
+                        year = date.getYear(),
+                        month = date.getMonth(),
+                        day = date.getDay())).toInt()
+            }
+            if (id > 0) {
+                it.onNext(Count(id.toInt(), counts, year, month, day))
+                it.onCompleted()
+            } else {
+                it.onError(Throwable("There was an error to increment the item count."))
+            }
+        }
+    }
+
     private fun <T> insertDb(insertFunc: () -> Long, createFunc: (Long) -> T): Observable<T> {
         return Observable.create<T> {
             val id = insertFunc()
@@ -64,7 +101,7 @@ class ItemsManager(private val db: Repository) {
                 it.onNext(createFunc(id))
                 it.onCompleted()
             } else {
-                it.onError(Throwable("There was an error to create the Group."))
+                it.onError(Throwable("There was an error to create the required element."))
             }
         }
     }

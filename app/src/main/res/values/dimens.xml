@@ -8,8 +8,10 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <dimen name="normal">16dp</dimen>
+    <dimen name="meddium">12dp</dimen>
+    <dimen name="small">10dp</dimen>
 
-    <dimen name="list_item_height">64dp</dimen>
+    <dimen name="list_item_height">80dp</dimen>
     <dimen name="list_item_group_height">64dp</dimen>
 
 </resources>

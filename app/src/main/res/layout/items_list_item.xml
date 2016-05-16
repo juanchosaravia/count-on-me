@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/list_item_group_height"
+    android:layout_height="@dimen/list_item_height"
     android:background="@color/colorPrimary"
     android:gravity="center"
     android:orientation="horizontal">
@@ -15,23 +15,63 @@
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
         android:layout_marginLeft="@dimen/normal"
-        android:layout_marginRight="@dimen/normal"
-        android:layout_toLeftOf="@+id/tvCounter"
-        android:layout_toStartOf="@+id/tvCounter"
-        android:ellipsize="end"
-        android:maxLines="3"
-        tools:text="Item Title" />
-
-    <TextView
-        android:id="@+id/tvCounter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_marginRight="@dimen/normal"
         android:layout_toLeftOf="@+id/itemPlusButton"
         android:layout_toStartOf="@+id/itemPlusButton"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        tools:text="0" />
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@android:color/white"
+        tools:text="Item Title" />
+
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/tvTitle"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/tvTitle"
+        android:text="Total Month:"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@android:color/white" />
+
+    <TextView
+        android:id="@+id/tvMonthCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/textView5"
+        android:layout_marginLeft="@dimen/small"
+        android:layout_toEndOf="@+id/textView5"
+        android:layout_toRightOf="@+id/textView5"
+        android:text="0"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@android:color/white" />
+
+
+    <TextView
+        android:id="@+id/textView7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/tvMonthCount"
+        android:layout_marginLeft="18dp"
+        android:layout_marginStart="18dp"
+        android:layout_toEndOf="@+id/tvMonthCount"
+        android:layout_toRightOf="@+id/tvMonthCount"
+        android:text="Current"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@android:color/white" />
+
+    <TextView
+        android:id="@+id/tvCurrentCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/textView7"
+        android:layout_marginLeft="@dimen/small"
+        android:layout_toEndOf="@+id/textView7"
+        android:layout_toRightOf="@+id/textView7"
+        android:text="0"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@android:color/white" />
+
 
     <Button
         android:id="@+id/itemPlusButton"
@@ -40,7 +80,9 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
+        android:layout_marginEnd="@dimen/normal"
         android:layout_marginRight="@dimen/normal"
         android:text="+" />
+
 
 </RelativeLayout>

@@ -27,6 +27,10 @@ fun ViewGroup.inflate(layoutId: Int, attachToRoot: Boolean = false): View {
     return LayoutInflater.from(context).inflate(layoutId, this, attachToRoot)
 }
 
+fun Calendar.getDay(): Int {
+    return get(Calendar.DAY_OF_MONTH)
+}
+
 fun Calendar.getMonth(): Int {
     return get(Calendar.MONTH)
 }

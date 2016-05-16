@@ -30,6 +30,8 @@ object DbSchema {
         val DAY = "day"
     }
 
+    val WHERE_ID = "_id = {id}"
+
     // ********* Group *********
 
     fun SQLiteDatabase.insertGroup(group: DbGroup): DbGroup {

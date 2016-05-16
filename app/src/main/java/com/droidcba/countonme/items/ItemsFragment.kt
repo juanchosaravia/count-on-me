@@ -5,9 +5,11 @@ import android.os.Parcelable
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.text.TextUtils
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import com.droidcba.countonme.Group
 import com.droidcba.countonme.Item
@@ -64,14 +66,12 @@ class ItemsFragment : BaseFragment(), ItemsAdapter.onItemsAdapterClicks {
         // The expandAll() method should be called here (before attaching the RecyclerView instance),
         // because it can reduce overheads of updating item views.
         if (eimSavedState == null) {
-            rvItemManager.expandAll()
-
-            // TODO: Use selected date
             rxLifecycle {
                 itemsManager.getGroupsByDate(Calendar.getInstance())
                         .androidOn()
                         .subscribe({ groups ->
-                            adapter.setGroups(groups)
+                            // TODO: Use selected date
+                            adapter.setGroups(groups, Calendar.getInstance())
                         }, {
                             toast("Something went wrong...")
                         })
@@ -97,7 +97,7 @@ class ItemsFragment : BaseFragment(), ItemsAdapter.onItemsAdapterClicks {
         }
     }
 
-    override fun onGroupPlus(group: Group, groupPosition: Int) {
+    override fun onCreateNewItem(group: Group, groupPosition: Int) {
         showDialog("Nombre del Item") { selectedText ->
             itemsManager.createItem(group, selectedText)
                     .androidOn()
@@ -109,16 +109,41 @@ class ItemsFragment : BaseFragment(), ItemsAdapter.onItemsAdapterClicks {
         }
     }
 
-    override fun onItemIncrement(item: Item, groupPosition: Int) {
-        throw UnsupportedOperationException()
-    }
-
-    override fun onItemNew(view: View, groupPosition: Int) {
-        throw UnsupportedOperationException()
+    override fun onItemIncrement(item: Item, groupPosition: Int, itemPosition: Int) {
+        // TODO: disable + button until finished.
+        // TODO: Use selected date
+        rxLifecycle {
+            itemsManager.incrementItem(item, Calendar.getInstance())
+                    .androidOn()
+                    .subscribe({ count ->
+                        adapter.countIncremented(count, groupPosition, itemPosition)
+                    })
+        }
     }
 
     fun showDialog(title: String, func: (String) -> Subscription) {
         val etGroupName = LayoutInflater.from(context).inflate(R.layout.group_new_dialog, null) as EditText
+        etGroupName.setImeActionLabel("Go", KeyEvent.KEYCODE_ENTER);
+
+        val checkFun = {
+            if (TextUtils.isEmpty(etGroupName.text)) {
+                etGroupName.error = "invalid value."
+            } else {
+                rxLifecycle {
+                    func(etGroupName.text.toString())
+                }
+                alertCreateGroup.dismiss()
+            }
+        }
+
+        etGroupName.setOnEditorActionListener { textView, i, keyEvent ->
+            if (i == EditorInfo.IME_NULL
+                    && keyEvent.action == KeyEvent.ACTION_DOWN) {
+                checkFun()
+            }
+            true
+        }
+
         val alert = AlertDialog.Builder(context);
         alert.setTitle(title);
         alert.setView(etGroupName);
@@ -128,14 +153,7 @@ class ItemsFragment : BaseFragment(), ItemsAdapter.onItemsAdapterClicks {
         alert.setNegativeButton("Cancelar") { dialog, whichButton -> dialog.dismiss() }
         alertCreateGroup = alert.show();
         alertCreateGroup.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-            if (TextUtils.isEmpty(etGroupName.text)) {
-                etGroupName.error = "invalid value."
-            } else {
-                rxLifecycle {
-                    func(etGroupName.text.toString())
-                }
-                alertCreateGroup.dismiss()
-            }
+            checkFun()
         }
         dialogs.add(alertCreateGroup)
     }

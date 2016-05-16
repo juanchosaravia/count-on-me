@@ -3,9 +3,13 @@ package com.droidcba.countonme.items
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.view.ViewGroup
+import com.droidcba.countonme.Count
 import com.droidcba.countonme.Group
 import com.droidcba.countonme.Item
 import com.droidcba.countonme.R
+import com.droidcba.countonme.commons.getDay
+import com.droidcba.countonme.commons.getMonth
+import com.droidcba.countonme.commons.getYear
 import com.droidcba.countonme.commons.inflate
 import com.h6ah4i.android.widget.advrecyclerview.expandable.RecyclerViewExpandableItemManager
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractExpandableItemAdapter
@@ -13,6 +17,7 @@ import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractExpandableItemVie
 import com.h6ah4i.android.widget.advrecyclerview.utils.RecyclerViewAdapterUtils
 import kotlinx.android.synthetic.main.items_list_group.view.*
 import kotlinx.android.synthetic.main.items_list_item.view.*
+import java.util.*
 
 /**
  *
@@ -25,9 +30,8 @@ class ItemsAdapter(
 ) : AbstractExpandableItemAdapter<ItemsAdapter.GroupViewHolder, ItemsAdapter.ItemViewHolder>() {
 
     interface onItemsAdapterClicks {
-        fun onGroupPlus(group: Group, groupPosition: Int)
-        fun onItemNew(view: View, groupPosition: Int)
-        fun onItemIncrement(item: Item, groupPosition: Int)
+        fun onCreateNewItem(group: Group, groupPosition: Int)
+        fun onItemIncrement(item: Item, groupPosition: Int, itemPosition: Int)
     }
 
     var year: Int = 0
@@ -83,7 +87,7 @@ class ItemsAdapter(
     inner class GroupViewHolder(v: View, val clickListener: View.OnClickListener) : AbstractExpandableItemViewHolder(v) {
         fun bind(group: Group, groupPosition: Int) = with(itemView) {
             groupPlusButton.setOnClickListener {
-                onItemsClick.onGroupPlus(group, groupPosition)
+                onItemsClick.onCreateNewItem(group, groupPosition)
             }
             tvDescription.text = group.desc
             setOnClickListener(clickListener)
@@ -93,8 +97,14 @@ class ItemsAdapter(
     inner class ItemViewHolder(v: View, val clickListener: View.OnClickListener) : AbstractExpandableItemViewHolder(v) {
         fun bind(item: Item, groupPosition: Int, itemPosition: Int) = with(itemView) {
             tvTitle.text = item.desc
+            // set date count:
             val count = item.getCountByDate(year, month, day)
-            tvCounter.text = if (count != null) count.counts.toString() else "0"
+            tvCurrentCount.text = if (count != null) count.counts.toString() else "0"
+            // set current month sum:
+            tvMonthCount.text = item.getMonthCount(year, month, day).toString()
+            itemPlusButton.setOnClickListener {
+                onItemsClick.onItemIncrement(item, groupPosition, itemPosition)
+            }
             setOnClickListener(clickListener)
         }
     }
@@ -103,19 +113,41 @@ class ItemsAdapter(
      * Handle Click Actions
      */
 
-    fun setGroups(groups: List<Group>) {
+    fun setDate(date: Calendar) {
+        this.day = date.getDay()
+        this.month = date.getMonth()
+        this.year = date.getYear()
+        notifyDataSetChanged()
+    }
+
+    fun setGroups(groups: List<Group>, date: Calendar) {
+        this.day = date.getDay()
+        this.month = date.getMonth()
+        this.year = date.getYear()
         data = groups.toMutableList()
         notifyDataSetChanged()
+        rvItemManager.expandAll()
     }
 
     fun addGroup(group: Group) {
         data.add(group)
         notifyItemInserted(data.lastIndex)
+        rvItemManager.expandAll()
     }
 
     fun addItem(groupPosition: Int, item: Item) {
         data[groupPosition].items.add(item)
-        notifyDataSetChanged()
+        notifyDataSetChanged() // TODO: I don't know how to notify just the sub-item.
+    }
+
+    fun countIncremented(count: Count, groupPosition: Int, itemPosition: Int) {
+        var filteredCount = data[groupPosition].items[itemPosition].getCountByDate(count)
+        if (filteredCount == null) {
+            data[groupPosition].items[itemPosition].counts.add(count)
+        } else {
+            filteredCount.counts++
+        }
+        notifyDataSetChanged() // TODO: I don't know how to notify just the sub-item.
     }
 
     /**

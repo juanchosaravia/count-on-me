@@ -1,9 +1,6 @@
 package com.droidcba.countonme.db
 
-import org.jetbrains.anko.db.insert
-import org.jetbrains.anko.db.parseList
-import org.jetbrains.anko.db.rowParser
-import org.jetbrains.anko.db.select
+import org.jetbrains.anko.db.*
 
 /**
  *
@@ -41,6 +38,27 @@ class RepositorySqlImpl(val sql: CountOnMeDbHelper) : Repository {
         }
     }
 
+    override fun insertCount(count: DbCount): Long {
+        return sql.use {
+            insert(DbSchema.TABLE_COUNTS_NAME,
+                    DbSchema.CountsColumns.ITEM_ID to count.itemId,
+                    DbSchema.CountsColumns.COUNT to count.counts,
+                    DbSchema.CountsColumns.YEAR to count.year,
+                    DbSchema.CountsColumns.MONTH to count.month,
+                    DbSchema.CountsColumns.DAY to count.day
+            )
+        }
+    }
+
+    override fun updateCount(count: DbCount): Int {
+        return sql.use {
+            update(DbSchema.TABLE_COUNTS_NAME,
+                    DbSchema.CountsColumns.COUNT to count.counts)
+                    .where("${DbSchema.WHERE_ID}", "id" to count.id)
+                    .exec()
+        }
+    }
+
     override fun getItemsByGroupId(groupId: Int): List<DbItem>? {
         return sql.use {
             select(DbSchema.TABLE_ITEM_NAME)
@@ -61,9 +79,9 @@ class RepositorySqlImpl(val sql: CountOnMeDbHelper) : Repository {
                             " AND ${DbSchema.CountsColumns.YEAR} = {year}",
                             "id" to itemId, "month" to month, "year" to year)
                     .exec {
-                        parseList(
-                                rowParser { id: Int, counts: Int, year: Int, month: Int, day: Int ->
-                                    DbCount(id, counts, year, month, day)
+                        parseList (
+                                rowParser { id: Int, itemId: Int, counts: Int, year: Int, month: Int, day: Int ->
+                                    DbCount(id, itemId, counts, year, month, day)
                                 })
                     }
         }
@@ -76,7 +94,7 @@ class RepositorySqlImpl(val sql: CountOnMeDbHelper) : Repository {
                     .exec {
                         parseList(
                                 rowParser { id: Int, counts: Int, year: Int, month: Int, day: Int ->
-                                    DbCount(id, counts, year, month, day)
+                                    DbCount(id, itemId, counts, year, month, day)
                                 })
                     }
         }
